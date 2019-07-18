@@ -21,7 +21,7 @@ function listPokemon() {
 	})
 	setTimeout(() => {
 		addElements();
-	}, 100);
+	}, 200);
 }
 
 function addElements() {
@@ -30,24 +30,35 @@ function addElements() {
 		chkBox.setAttribute("type", "checkbox");
 		chkBox.setAttribute("class", "form-check-input")
 		chkBox.setAttribute */
-		let chkBox = document.createElement("label");
-		chkBox.innerHTML = `<input type="checkbox" value="">${pokemon__types[i]["name"]}`;
-		chkBox.style.display="block";
-		document.body.appendChild(chkBox);
+		let chkBox = document.createElement("input");
+		let chkLabel = document.createElement("label");
+		chkBox.type = "checkbox";
+		chkBox.value = `${pokemon__types[i]["name"]}`;
+		chkLabel.appendChild(document.createTextNode(` ${pokemon__types[i]["name"]}`));
+
+		// console.log (`${pokemon__types[i]["name"]}`);
+		chkLabel.style.display = "inline-block";
+		chkBox.style.display = "block";
+		document.getElementsByClassName("container")[0].appendChild(chkBox);
+		document.getElementsByClassName("container")[0].appendChild(chkLabel);
 	}
+
 }
 
-function httpGetAsync(theUrl, callback) {
-	var xmlHttp = new XMLHttpRequest();
-	xmlHttp.onreadystatechange = function () {
-		if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-			callback(xmlHttp.responseText);
+function whatIsChecked() {
+	let boxes = document.querySelectorAll('input[type="checkbox"]');
+	let filtersChecked = [];
+	for (var i = 0; i < boxes.length; i++) {
+		console.log(boxes[i]["checked"]);
+		if (boxes[i]["checked"] == true) {
+			filtersChecked.push(boxes[i].value);
+		}
 	}
-	xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-	xmlHttp.send(null);
+	return filtersChecked
 }
 
 function getPokemon() {
+	pokemon__data = [];
 	getPokemonTypes();
 }
 
@@ -58,35 +69,45 @@ function getPokemonTypes() {
 
 
 	for (let i = 0; i < filters.length; i++) {
-		console.log()
 		let url = "https://pokeapi.co/api/v2/type/" + filters[i];
+		console.log(url)
 		let response;
 		httpGetAsync(url, function (response) {
 			/* console.log(JSON.parse(response)); */ // document.getElementById(`countryCode${i+1}`).setAttribute("value", JSON.parse(response)["name"]);
 			/* document.getElementById("currency").innerText = JSON.parse(response)["currencies"][0]["name"];
 			document.getElementById("flag").setAttribute("src", JSON.parse(response)["flag"]);
 			document.getElementById("flag").style["border"] = "2px solid black" */
+			/* console.log("1" + pokemon__data);
+			console.log(`2. ${console.log(JSON.parse(response))}`);
+			console.log(JSON.parse(response)["pokemon"]); */
 			pokemon__data.push(JSON.parse(response)["pokemon"]);
 		})
 	}
 	console.log(pokemon__data);
 
-	// pokeDOM();
-	setTimeout(() => {
-		pokeDOM();
+	var timeout = setInterval(function () {
+		if (pokemon__data.length > 0) {
+			clearInterval(timeout);
+			pokeDOM();
+		}
 	}, 100);
 
-
-
+	// setTimeout(() => {
+	;
+	// }, 500);
 }
 
+//Añade en el DOM los pokemons filtrados
 function pokeDOM() {
+	
+	console.log(pokemon__data + "pokedata");
+	console.log(document.getElementsByClassName("pokeName"));
 	document.getElementsByClassName("pokeName")[0].innerText = pokemon__data[0][0]["pokemon"]["name"];
 	// console.log(pokemon__data[0][0]["pokemon"]["name"])
 	var str = pokemon__data[0][0]["pokemon"]["url"];
 	var res = str.substring(34, str.length - 1);
 	var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + res + ".png";
-	console.log(urlImage);
+	// console.log(urlImage);
 	document.getElementsByClassName("pokePic")[0].setAttribute("src", urlImage);
 }
 
@@ -94,13 +115,13 @@ function pokeDOM() {
 
 function filterPokemon() {
 	//comprobar todos los checkBoxex del html y si están marcados o tienen texto los inputs, añadir String con el filtro a una array
-	let listaFiltros = ["water", "fire", "flying"];
+	let listaFiltros = whatIsChecked();
 	return listaFiltros;
 
 }
 
 
-function enableTypeFilters() {
+/* function enableTypeFilters() {
 	if (document.getElementById("filterType")) {
 
 	} else {
@@ -111,7 +132,7 @@ function enableTypeFilters() {
 		filters[i].removeAttribute("disabled");
 	}
 
-}
+} */
 
 
 /* function initTypes() {
@@ -130,7 +151,15 @@ function enableTypeFilters() {
 
 
 
-
+function httpGetAsync(theUrl, callback) {
+	var xmlHttp = new XMLHttpRequest();
+	xmlHttp.onreadystatechange = function () {
+		if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+			callback(xmlHttp.responseText);
+	}
+	xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+	xmlHttp.send(null);
+}
 
 
 function preventRefresh(event) {
