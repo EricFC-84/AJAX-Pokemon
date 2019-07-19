@@ -6,14 +6,11 @@ let pokemonTable = document.getElementById("pokemonTable");
 
 /* 
 TO DO: filtrar repetidos--> crear nueva array. añadir objetos con name/pic/data y type. Antes de crear la row, mirar si ya está en la array
-y se es así solo añadir el type adicional. Al final, crear una row con cada posición del array y append al tbody */
-
-
-/* calcular URL de imagen a trabes de la url del pokemon
-	var str = "https://pokeapi.co/api/v2/pokemon/7/";
-  var res = str.substring(34, str.length-1);
-  var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+res+".png"; 
+y se es así solo añadir el type adicional. Al final, crear una row con cada posición del array y append al tbody 
+TO DO: añadir más filtros --> aprovechar el filtro de types pero filtarr los resultados dentro de cada array de type
 */
+
+
 function listPokemon() {
 	/*Obtenemos la lista con todos los pokemons (solo nombre y url para info detallada) */
 	// let url = "https://pokeapi.co/api/v2/pokemon/?limit=300"; //964, or use key "count" and add as new url.
@@ -31,10 +28,7 @@ function addElements() {
 	let filterBox = document.getElementById("filterContainer");
 
 	for (let i = 0; i < pokemon__types.length; i++) {
-		/* let chkBox = document.createElement("input");
-		chkBox.setAttribute("type", "checkbox");
-		chkBox.setAttribute("class", "form-check-input")
-		chkBox.setAttribute */
+
 		let chkDiv = document.createElement("div");
 		chkDiv.className = "checkDiv col-md-4 col-6";
 		chkDiv.style.textIndent = "50%";
@@ -46,15 +40,8 @@ function addElements() {
 		chkLabel.appendChild(document.createTextNode(`${pokemon__types[i]["name"]}`));
 		chkLabel.style.textIndent = "1rem";
 		chkDiv.innerHTML = chkBox.outerHTML + chkLabel.outerHTML;
-		// console.log(chkDiv.innerHTML);
 
-		// console.log (`${pokemon__types[i]["name"]}`);
-		// chkLabel.style.display = "inline-block";
-		// chkBox.style.display = "block";
 		filterBox.appendChild(chkDiv);
-
-		/* document.getElementsByClassName("container")[0].appendChild(chkBox);
-		document.getElementsByClassName("container")[0].appendChild(chkLabel); */
 	}
 
 }
@@ -80,8 +67,7 @@ function getPokemon() {
 
 function getPokemonTypes() {
 	let filters = filterPokemon()
-	//Test con 3 filtros fijos
-	// console.log(filters)
+
 
 
 	for (let i = 0; i < filters.length; i++) {
@@ -89,28 +75,18 @@ function getPokemonTypes() {
 		// console.log(url)
 		let response;
 		httpGetAsync(url, function (response) {
-			/* console.log(JSON.parse(response)); */ // document.getElementById(`countryCode${i+1}`).setAttribute("value", JSON.parse(response)["name"]);
-			/* document.getElementById("currency").innerText = JSON.parse(response)["currencies"][0]["name"];
-			document.getElementById("flag").setAttribute("src", JSON.parse(response)["flag"]);
-			document.getElementById("flag").style["border"] = "2px solid black" */
-			/* console.log("1" + pokemon__data);
-			console.log(`2. ${console.log(JSON.parse(response))}`);
-			console.log(JSON.parse(response)["pokemon"]); */
 			pokemon__data.push(JSON.parse(response)["pokemon"]);
 		})
 	}
-	console.log(pokemon__data);
+	/* 	console.log(filters.length)
+		console.log(pokemon__data); */
 
 	var timeout = setInterval(function () {
-		if (pokemon__data.length > 0) {
+		if (pokemon__data.length == filters.length) {
 			clearInterval(timeout);
 			pokeDOM();
 		}
 	}, 100);
-
-	// setTimeout(() => {
-
-	// }, 500);
 }
 
 //Añade en el DOM los pokemons filtrados
@@ -132,8 +108,9 @@ function pokeDOM() {
 
 			nameCell.innerText = pokemon__data[j][i]["pokemon"]["name"];
 			var str = pokemon__data[j][i]["pokemon"]["url"];
-			dataCell.innerHTML = `<a href="${str}">${str}</a>`;
 			var res = str.substring(34, str.length - 1);
+			dataCell.innerHTML = `<a href="#" data-toggle="modal" data-target="#showDetails" onclick="showDetailsOnModal(event,${res})">${str}</a>`
+
 			//string.replace(url, "");
 			var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + res + ".png";
 
@@ -148,7 +125,70 @@ function pokeDOM() {
 		}
 		pokemonTable.appendChild(tableBody);
 	}
-	
+
+}
+
+function showDetailsOnModal(e, idPokemon) {
+	console.log("Modal");
+	let modalObject = document.getElementsByClassName("modal-dialog")[0];
+	modalObject.style.display="none";
+	let url = "https://pokeapi.co/api/v2/pokemon/" + idPokemon;
+	let singlePokemonData = [];
+	console.log("singlePokemonData: " + singlePokemonData);
+	let response;
+	httpGetAsync(url, function (response) {
+		singlePokemonData.push(JSON.parse(response));
+	})
+	var timeout = setInterval(function () {
+		if (singlePokemonData.length == 1) {
+			clearInterval(timeout);
+			fillModal(singlePokemonData, idPokemon);
+			
+
+		}
+	}, 100);
+
+}
+
+function fillModal(singlePokemonData, idPokemon) {
+	console.log(singlePokemonData);
+	document.getElementById("pokemonModalTitle").innerText = singlePokemonData[0]["name"];
+
+	//"modal-body"
+	console.log(singlePokemonData[0]);
+	console.log(singlePokemonData[0]["types"]);
+	let numTypes = singlePokemonData[0]["types"].length;
+	console.log("length" + numTypes);
+	let bodyText = document.getElementsByClassName("modal-body")[0];
+	bodyText.innerText = "";
+	for (let i = 0; i < numTypes; i++) {
+		let pokemonTypeText = "";
+		console.log("types")
+		if (i==0){
+			pokemonTypeText = singlePokemonData[0]["types"][i]["type"]["name"];
+		}else {
+			pokemonTypeText = ", " + singlePokemonData[0]["types"][i]["type"]["name"]
+		}
+		bodyText.innerText += pokemonTypeText;
+	}
+
+	///////
+	let url = "https://pokeapi.co/api/v2/pokemon-species/" + idPokemon;
+	let response;
+	let speciesInfo = 0;
+	httpGetAsync(url, function (response) {
+		speciesInfo = (JSON.parse(response));
+	})
+	let modalObject = document.getElementsByClassName("modal-dialog")[0];
+	var timeout = setInterval(function () {
+		if (speciesInfo != 0) {
+			clearInterval(timeout);
+			bodyText.innerText += "; " + speciesInfo["generation"]["name"];
+			modalObject.style.display="block";
+		}
+	}, 100);
+
+	//////////
 }
 
 

@@ -3,6 +3,10 @@
 
 
 }
+
+body{
+    text-transform: capitalize;
+}
 /* body{
     background: url("./img/background.jpg");
     
