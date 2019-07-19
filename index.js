@@ -1,6 +1,12 @@
 let allPokemons;
 let pokemon__types;
 let pokemon__data = [];
+let pokemonTable = document.getElementById("pokemonTable");
+
+
+/* 
+TO DO: filtrar repetidos--> crear nueva array. añadir objetos con name/pic/data y type. Antes de crear la row, mirar si ya está en la array
+y se es así solo añadir el type adicional. Al final, crear una row con cada posición del array y append al tbody */
 
 
 /* calcular URL de imagen a trabes de la url del pokemon
@@ -14,9 +20,6 @@ function listPokemon() {
 	let url = "https://pokeapi.co/api/v2/type/"
 	let response;
 	httpGetAsync(url, function (response) {
-		// document.getElementById("broma").innerText = JSON.parse(response)["value"];
-		// allPokemons = JSON.parse(response);
-		// console.log(allPokemons);
 		pokemon__types = JSON.parse(response)["results"];
 	})
 	setTimeout(() => {
@@ -25,22 +28,33 @@ function listPokemon() {
 }
 
 function addElements() {
+	let filterBox = document.getElementById("filterContainer");
+
 	for (let i = 0; i < pokemon__types.length; i++) {
 		/* let chkBox = document.createElement("input");
 		chkBox.setAttribute("type", "checkbox");
 		chkBox.setAttribute("class", "form-check-input")
 		chkBox.setAttribute */
+		let chkDiv = document.createElement("div");
+		chkDiv.className = "checkDiv col-md-4 col-6";
+		chkDiv.style.textIndent = "50%";
 		let chkBox = document.createElement("input");
 		let chkLabel = document.createElement("label");
 		chkBox.type = "checkbox";
 		chkBox.value = `${pokemon__types[i]["name"]}`;
-		chkLabel.appendChild(document.createTextNode(` ${pokemon__types[i]["name"]}`));
+
+		chkLabel.appendChild(document.createTextNode(`${pokemon__types[i]["name"]}`));
+		chkLabel.style.textIndent = "1rem";
+		chkDiv.innerHTML = chkBox.outerHTML + chkLabel.outerHTML;
+		// console.log(chkDiv.innerHTML);
 
 		// console.log (`${pokemon__types[i]["name"]}`);
-		chkLabel.style.display = "inline-block";
-		chkBox.style.display = "block";
-		document.getElementsByClassName("container")[0].appendChild(chkBox);
-		document.getElementsByClassName("container")[0].appendChild(chkLabel);
+		// chkLabel.style.display = "inline-block";
+		// chkBox.style.display = "block";
+		filterBox.appendChild(chkDiv);
+
+		/* document.getElementsByClassName("container")[0].appendChild(chkBox);
+		document.getElementsByClassName("container")[0].appendChild(chkLabel); */
 	}
 
 }
@@ -59,18 +73,20 @@ function whatIsChecked() {
 
 function getPokemon() {
 	pokemon__data = [];
+	let body = document.getElementsByTagName("tbody")[0];
+	body.parentNode.removeChild(body);
 	getPokemonTypes();
 }
 
 function getPokemonTypes() {
 	let filters = filterPokemon()
 	//Test con 3 filtros fijos
-	console.log(filters)
+	// console.log(filters)
 
 
 	for (let i = 0; i < filters.length; i++) {
 		let url = "https://pokeapi.co/api/v2/type/" + filters[i];
-		console.log(url)
+		// console.log(url)
 		let response;
 		httpGetAsync(url, function (response) {
 			/* console.log(JSON.parse(response)); */ // document.getElementById(`countryCode${i+1}`).setAttribute("value", JSON.parse(response)["name"]);
@@ -93,24 +109,47 @@ function getPokemonTypes() {
 	}, 100);
 
 	// setTimeout(() => {
-	;
+
 	// }, 500);
 }
 
 //Añade en el DOM los pokemons filtrados
 function pokeDOM() {
-	
+
 	console.log(pokemon__data + "pokedata");
 	console.log(document.getElementsByClassName("pokeName"));
-	document.getElementsByClassName("pokeName")[0].innerText = pokemon__data[0][0]["pokemon"]["name"];
-	// console.log(pokemon__data[0][0]["pokemon"]["name"])
-	var str = pokemon__data[0][0]["pokemon"]["url"];
-	var res = str.substring(34, str.length - 1);
-	var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + res + ".png";
-	// console.log(urlImage);
-	document.getElementsByClassName("pokePic")[0].setAttribute("src", urlImage);
-}
+	let tableBody = document.createElement("tbody");
+	for (let j = 0; j < pokemon__data.length; j++) {
 
+
+		for (let i = 0; i < pokemon__data[j].length; i++) {
+			let tableRow = document.createElement("tr");
+			let nameCell = document.createElement("td");
+			let picCell = document.createElement("td");
+			let picData = document.createElement("div");
+			let dataCell = document.createElement("td");
+
+
+			nameCell.innerText = pokemon__data[j][i]["pokemon"]["name"];
+			var str = pokemon__data[j][i]["pokemon"]["url"];
+			dataCell.innerHTML = `<a href="${str}">${str}</a>`;
+			var res = str.substring(34, str.length - 1);
+			//string.replace(url, "");
+			var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + res + ".png";
+
+			picData.className = "pokePic";
+
+			picData.style.backgroundImage = `url(${urlImage})`;
+			picCell.appendChild(picData);
+
+			tableRow.innerHTML = picCell.outerHTML + nameCell.outerHTML + dataCell.outerHTML;
+			tableBody.appendChild(tableRow);
+
+		}
+		pokemonTable.appendChild(tableBody);
+	}
+	
+}
 
 
 function filterPokemon() {
@@ -120,6 +159,14 @@ function filterPokemon() {
 
 }
 
+function filterButtonDelay() {
+
+	let button = document.getElementById("filterButton");
+	button.setAttribute("disabled", "disabled");
+	setTimeout(() => {
+		button.removeAttribute("disabled");
+	}, 600);
+}
 
 /* function enableTypeFilters() {
 	if (document.getElementById("filterType")) {

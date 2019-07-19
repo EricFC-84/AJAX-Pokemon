@@ -21,14 +21,26 @@
 </head>
 
 <body onload="listPokemon()">
-<div class="container">
-    <button type="button" class="btn btn-dark" onclick="getPokemon()">Filter</button>
+
+    <div class="text-center">
+        <h1>Pokémon Finder!</h1>
+    </div>
+    <main>
+        <div class="container pt-5">
+            <div class="row" id=filterContainer>
 
 
-</div>
-    
-    <!-- <body> -->
-    <!-- <div class="container">
+            </div>
+
+            <div class="row justify-content-center">
+                <button type="button" class="btn btn-dark px-5 mt-4" id="filterButton"
+                    onclick="getPokemon(), filterButtonDelay()">Filter</button>
+            </div>
+
+        </div>
+
+        <!-- <body> -->
+        <!-- <div class="container">
         <div class="row">
             <div class="col-12">
                 <div class="form-check">
@@ -92,20 +104,51 @@
 
    
  -->
- <div class="container">
-    <div class="row">
-        <div class="col-4">
-            <p class="pokeName"></p>
-        </div>
-        <div class="col-4">
-            <p class="pokeType"></p>
-        </div>
-        <div class="col-4">
-            <img src="" alt="" class="pokePic">
-        </div>
-    </div>
-</div>
 
+        <div class="container pt-5">
+            <div class="row">
+
+                <table class="table table-bordered table-striped" id="pokemonTable">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <!-- <tbody>
+                    <tr>
+                        <td> <img src="" alt="" class="pokePic"></td>
+                        <td class="pokeName"></td>
+                        <td class="pokeDetails"></td>
+                    </tr>
+                    <tr>
+                        <td> <img src="" alt="" class="pokePic"></td>
+                        <td class="pokeName"></td>
+                        <td class="pokeDetails"></td>
+                    </tr>
+                </tbody> -->
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- <div class="container">
+        <div class="row">
+            <div class="col-4">
+                <p class="pokeName"></p>
+            </div>
+            <div class="col-4">
+                <p class="pokeType"></p>
+            </div>
+            <div class="col-4">
+                <img src="" alt="" class="pokePic">
+            </div>
+        </div>
+    </div> -->
+    </main>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->

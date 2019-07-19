@@ -3,13 +3,38 @@
 
 
 }
+/* body{
+    background: url("./img/background.jpg");
+    
+}
 
+main{
+    margin: 0 15%;
+    background: black;
+    color: white;
+} */
+.pokePic{
+width: 100px;
+height: 100px;   
+margin: auto; 
+}
 
-
-
-img {
+/* img {
 
     width: 300px;
     height: auto;
 
+} */
+
+* {
+    box-sizing: border-box;
+}
+
+.container{
+    padding-left: 0;
+    padding-right: 0;
+}
+.checkDiv{
+    padding: 0;
+    margin: 0;
 }
