@@ -4,7 +4,11 @@
 
 }
 
-body{
+/* body{
+    text-transform: capitalize;
+} */
+
+#filterContainer {
     text-transform: capitalize;
 }
 /* body{
@@ -21,8 +25,20 @@ main{
 width: 100px;
 height: 100px;   
 margin: auto; 
+background-size: contain;
 }
+#modalImage{
+    width: 30vh;
+    height: 30vh;
+    background-size: contain;
+    border: 3px solid black;
+}
+#modalPokemonDialog {
+    max-width: 70vh;
+    margin-top: 10vh;
+    text-transform: capitalize;
 
+}
 /* img {
 
     width: 300px;
