@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="index.css">
 </head>
 
-<body onload="siteInit()">
+<body onload="listPokemon()">
 
     <div class="text-center">
         <h1>Pokémon Finder!</h1>
@@ -34,9 +34,9 @@
 
             <div class="row mx-0 justify-content-center">
                 <button type="button" class="btn btn-dark px-5 mt-4" id="filterButton"
-                    onclick="filterPokemons(), filterButtonDelay()">Filter</button>
+                    onclick="getPokemon(), filterButtonDelay()">Filter</button>
             </div>
-            <div><h3 style="display: none" id="pokeCount"> </h3></div>
+
         </div>
 
         <div class="container pt-5">
@@ -52,6 +52,9 @@
 
                         </tr>
                     </thead>
+                    <tbody>
+
+                    </tbody>
 
                 </table>
 
@@ -75,8 +78,14 @@
                     </button>
                 </div>
                 <div class="row">
-                    <div class="col-6" id="modalPokemonTypeData">
-                        
+                    <div class="col-6">
+                        <div class="modal-body">
+                        </div>
+                        <div class="modal-body damageType">
+                        </div>
+                        <div class="modal-body damageMultiplier" id="damageRelations">
+                                
+                        </div>
                     </div>
                     <div class="col-6">
                         <div class="modal-body" id="modalImage"></div>
@@ -102,7 +111,7 @@
     <script src="https://getbootstrap.com/docs/4.0/assets/js/vendor/popper.min.js"></script>
     <script src="https://getbootstrap.com/docs/4.0/dist/js/bootstrap.min.js"></script>
     <script src="https://getbootstrap.com/docs/4.0/assets/js/vendor/holder.min.js"></script>
-    <script src="./indexv2.js"></script>
+    <script src="./index.js"></script>
 
 </body>
 

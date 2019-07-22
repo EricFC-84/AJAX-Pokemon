@@ -1,397 +1,482 @@
-let allPokemons;
-let pokemon__types;
-let filters = [];
-let pokemon__data = [];
-let pokemonTable = document.getElementById("pokemonTable");
-let pokemon__type__damage = [];
+let typeUrl = "https://pokeapi.co/api/v2/type/";
+let pokemonUrl = "https://pokeapi.co/api/v2/pokemon/"; //already in types["pokemon"]["url"]
+let speciesUrl = "https://pokeapi.co/api/v2/pokemon-species/"; //already in pokemon["species"]["url"]
+let imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" //need to add 'id' + .png
 
-/* 
-TO DO: filtrar repetidos--> crear nueva array. añadir objetos con name/pic/data y type. Antes de crear la row, mirar si ya está en la array
-y se es así solo añadir el type adicional. Al final, crear una row con cada posición del array y append al tbody 
-TO DO: añadir más filtros --> aprovechar el filtro de types pero filtarr los resultados dentro de cada array de type
-*/
+let allTypes = [];
+let checkedTypes = [];
+let filteredByTypePokemons = [];
+let singlePokemonData;
+let listDamageRelationships = [];
 
+let filterExclusive = false;
 
-function listPokemon() {
-	/*Obtenemos la lista con todos los pokemons (solo nombre y url para info detallada) */
-	// let url = "https://pokeapi.co/api/v2/pokemon/?limit=300"; //964, or use key "count" and add as new url.
-	let url = "https://pokeapi.co/api/v2/type/"
-	let response;
-	httpGetAsync(url, function (response) {
-		pokemon__types = JSON.parse(response)["results"];
-	})
-	setTimeout(() => {
-		addElements();
-	}, 200);
+function siteInit() { //body --> onload
+    let response;
+    httpGetAsync(typeUrl, function (response) {
+        allTypes = JSON.parse(response)["results"];
+    })
+    // callApi(typeUrl);
+    setTimeout(() => {
+        DOM_checkBoxes(); //uses allTypes to create all the checkboxes+labels and put it in the dom with document.createElement
+    }, 200);
+
+    fillRandomPokemonRow();
+
 }
 
-function addElements() {
-	let filterBox = document.getElementById("filterContainer");
+function DOM_checkBoxes() {
+    let filterBoxRow = document.getElementById("filterContainer");
 
-	for (let i = 0; i < pokemon__types.length; i++) {
+    for (let i = 0; i < allTypes.length; i++) {
 
-		let chkDiv = document.createElement("div");
-		chkDiv.className = "checkDiv col-lg-3 col-md-4 col-6";
-		// chkDiv.style.textIndent = "50%";
-		let chkBox = document.createElement("input");
-		let chkLabel = document.createElement("label");
-		chkBox.type = "checkbox";
-		chkBox.value = `${pokemon__types[i]["name"]}`;
-		chkLabel.appendChild(chkBox);
-		chkLabel.appendChild(document.createTextNode(` ${pokemon__types[i]["name"]}`));
-		chkLabel.style.textIndent = "1rem";
-		chkDiv.innerHTML = /* chkBox.outerHTML +  */ chkLabel.outerHTML;
+        let chkDiv = document.createElement("div");
+        chkDiv.className = "checkDiv col-lg-3 col-md-4 col-6";
+        let chkBox = document.createElement("input");
+        let chkLabel = document.createElement("label");
+        chkBox.type = "checkbox";
+        chkBox.value = `${allTypes[i]["name"]}`;
+        chkLabel.appendChild(chkBox);
+        chkLabel.appendChild(document.createTextNode(` ${allTypes[i]["name"]}`));
+        chkLabel.style.textIndent = "1rem";
+        chkDiv.innerHTML = chkLabel.outerHTML;
 
-		filterBox.appendChild(chkDiv);
-	}
+        filterBoxRow.appendChild(chkDiv);
+    }
 
+}
+
+function fillRandomPokemonRow() {
+    let randomPokemon = "";
+    let randomPokemonId = parseInt(Math.random() * 150 + 1);
+    let randomPokemonUrl = pokemonUrl + randomPokemonId;
+    // console.log(randomPokemonUrl);
+    httpGetAsync(randomPokemonUrl, function (response) {
+        randomPokemon = JSON.parse(response);
+    })
+    var timeout = setInterval(function () {
+            if (randomPokemon != "") {
+                clearInterval(timeout);
+
+                // console.log(randomPokemon);
+                let randomPokemonTypes = "";
+                for (let i = 0; i < randomPokemon["types"].length; i++) {
+                    if (i > 0) {
+                        randomPokemonTypes += ", " + randomPokemon["types"][i]["type"]["name"];
+                    } else {
+                        randomPokemonTypes += randomPokemon["types"][i]["type"]["name"];
+                    }
+                }
+                singlePokemonData = {
+                    "name": randomPokemon["name"],
+                    "image": randomPokemon["sprites"]["front_default"],
+                    "types": randomPokemonTypes,
+                    "url": randomPokemonUrl
+                };
+                let pokemonTable = document.getElementById("pokemonTable");
+                let tableBody = document.createElement("tbody"); //cambiar
+                DOM_tableSingleRow(pokemonTable, tableBody); //creates a table row. In this case, would need to create only 1 row with randomPokemon data: pic, name, types and add pokemonURL too.
+            }
+
+        },
+        100);
+}
+
+function DOM_tableSingleRow(pokemonTable, tableBody) {
+
+    let tableRow = document.createElement("tr");
+    let nameCell = document.createElement("td");
+    let picCell = document.createElement("td");
+    let picData = document.createElement("div");
+    let urlCell = document.createElement("td");
+    let typeCell = document.createElement("td");
+
+    picData.className = "pokePic";
+    picData.style.backgroundImage = `url(${singlePokemonData["image"]})`;
+    picCell.appendChild(picData);
+    nameCell.innerText = singlePokemonData["name"];
+    nameCell.style.textTransform = "capitalize";
+    typeCell.innerText = singlePokemonData["types"];
+    var pokemonId = singlePokemonData["url"].substring(34, singlePokemonData["url"].length);
+    // console.log("pokemon ID =" + pokemonId);
+    // console.log(singlePokemonData["url"]);
+
+    urlCell.innerHTML = `<a href="#" class="btn btn-danger" data-toggle="modal" data-target="#showDetails" onclick="modalPokemon(event, ${pokemonId})">${singlePokemonData["name"]}</a>`
+
+    tableRow.innerHTML = picCell.outerHTML + nameCell.outerHTML + typeCell.outerHTML + urlCell.outerHTML;
+    tableBody.appendChild(tableRow);
+    pokemonTable.appendChild(tableBody);
+
+}
+
+function filterPokemons() { //Filter button --> onClick
+    resetGlobalVariables();
+    whatIsChecked(); //cheks all checkboxes and add the "value" to checkedTypes[] if it was checked
+    getCheckedPokemons(/* DOM_tableAllRows() */); //gets all pokemon of each types. check if repeated and adds all new pokemon in"filteredByTypePokemons
+    //TO DO: añadir callback para ejecutar el siguiente código tras recibir el json
+    var timeout = setInterval(function () {
+        if (filteredByTypePokemons.length != 0) {
+            clearInterval(timeout);
+            document.querySelector("#pokemonTable > thead > tr > th:nth-child(3)").innerText = "Matching types";
+            DOM_tableAllRows(); //uses "filteredByTypePokemons[]" to create every row of the table. each position of the array should have pic, name, types and url of pokemon
+        }
+    }, 200)
+}
+
+
+
+function resetGlobalVariables() {
+    checkedTypes = [];
+    filteredByTypePokemons = [];
+    singlePokemonData = [];
+    let body = document.getElementsByTagName("tbody");
+    // console.log("Reset variables. Tbody count = " + body.length);
+    if (body.length > 0) {
+        // console.log(body);
+        body[0].parentNode.removeChild(body[0]);
+    }
 }
 
 function whatIsChecked() {
-	let boxes = document.querySelectorAll('input[type="checkbox"]');
-	let filtersChecked = [];
+    let all_checkbox_elements = document.querySelectorAll('input[type="checkbox"]');
 
-	for (var i = 0; i < boxes.length; i++) {
-		console.log(boxes[i]["checked"]);
-		if (boxes[i]["checked"] == true) {
-			filtersChecked.push(boxes[i].value);
-		}
-	}
-	return filtersChecked
+    for (let i = 0; i < all_checkbox_elements.length; i++) {
+        if (all_checkbox_elements[i]["checked"] == true) {
+            checkedTypes.push(all_checkbox_elements[i].value);
+        }
+    }
 }
 
-function getPokemon() {
-	pokemon__data = [];
-	let body = [];
-	pokemon__type__damage = [];
-	body = document.getElementsByTagName("tbody");
-	if (body.length > 0) {
-		console.log(body);
-		body[0].parentNode.removeChild(body[0]);
-	}
-	getPokemonTypes();
+function getCheckedPokemons(/* callback */) {
+
+    for (let i = 0; i < checkedTypes.length; i++) {
+        let checkedTypeName = checkedTypes[i];
+
+
+
+        let currentTypePokemons = [];
+        let response;
+
+        httpGetAsync(typeUrl + checkedTypeName, function (response) {
+            currentTypePokemons = JSON.parse(response)["pokemon"];
+            // callback(); 
+        })
+
+        setTimeout(() => { //TO DO --> cambiar por interval??
+
+            /*  console.log(typeUrl + checkedTypeName);
+             console.log(currentTypePokemons);
+             console.log(currentTypePokemons.length); */
+            // var timeout = setInterval(function () {
+            if (currentTypePokemons.length > 0) {
+                // clearInterval(timeout);
+                /* console.log(typeUrl + checkedTypeName);
+                console.log(currentTypePokemons);
+                console.log(currentTypePokemons.length); */
+                for (let j = 0; j < currentTypePokemons.length; j++) {
+                    let pokemonName = currentTypePokemons[j]["pokemon"]["name"]
+                    // console.log(pokemonName);
+                    if ((!chosenAlready(pokemonName, checkedTypeName))) {
+                        //is a new pokemon
+                        addPokemon(currentTypePokemons[j]["pokemon"], checkedTypeName)
+                    }
+                }
+                // console.log(filteredByTypePokemons)
+                document.getElementById("pokeCount").style.display = "block";
+                document.getElementById("pokeCount").innerText = "Pokemon count: " + filteredByTypePokemons.length;
+            }
+            // },
+            // 100);
+        }, 200)
+    }
 }
 
-function getPokemonTypes() {
-	filters = filterPokemon()
-
-	if (filters.length == 0) return;
-
-	for (let i = 0; i < filters.length; i++) {
-		let url = "https://pokeapi.co/api/v2/type/" + filters[i];
-		// console.log(url)
-		let response;
-		httpGetAsync(url, function (response) {
-			pokemon__data.push(JSON.parse(response)["pokemon"]);
-			pokemon__type__damage.push(JSON.parse(response)["damage_relations"])
-		})
-	}
-	/* 	console.log(filters.length)
-		console.log(pokemon__data); */
-
-	var timeout = setInterval(function () {
-		if (pokemon__data.length == filters.length) {
-			clearInterval(timeout);
-			pokeDOM();
-		}
-	}, 100);
+function chosenAlready(pokemonName, pokemonType) {
+    for (let i = 0; i < filteredByTypePokemons.length; i++) {
+        // console.log(pokemonName)
+        if (filteredByTypePokemons[i]["name"] == pokemonName) {
+            filteredByTypePokemons[i]["types"] += ", " + pokemonType;
+            return true;
+        }
+    }
 }
 
-//Añade en el DOM los pokemons filtrados
-function pokeDOM() {
+function addPokemon(pokemonData, pokemonType) {
+    let currentPokemonUrl = pokemonData["url"];
 
-	console.log(pokemon__data + "pokedata");
-	console.log("1");
-	console.log(document.getElementsByClassName("pokeName"));
-	let tableBody = document.createElement("tbody");
-	for (let numTypes = 0; numTypes < pokemon__data.length; numTypes++) {
-		let pokemonTypeText = filters[numTypes];
-		console.log(pokemonTypeText);
-		pokeDOM_rows(pokemonTypeText, numTypes, tableBody);
-
-		pokemonTable.appendChild(tableBody);
-	}
-
+    let currentImageUrl = imageUrl + currentPokemonUrl.substring(34, currentPokemonUrl.length - 1) + ".png";
+    currentPokemonUrl = currentPokemonUrl.substring(0, currentPokemonUrl.length - 1);
+    // console.log("current pokemon url = " + currentPokemonUrl);
+    filteredByTypePokemons.push({
+        "image": currentImageUrl,
+        "name": pokemonData["name"],
+        "types": pokemonType,
+        "url": currentPokemonUrl
+    })
 }
 
-function pokeDOM_rows(pokemonTypeText, type, tableBody) {
-
-	for (let i = 0; i < pokemon__data[type].length; i++) {
-
-		let tableRow = document.createElement("tr");
-		let nameCell = document.createElement("td");
-		let picCell = document.createElement("td");
-		let picData = document.createElement("div");
-		let dataCell = document.createElement("td");
-		let typeCell = document.createElement("td");
-
-		nameCell.innerText = pokemon__data[type][i]["pokemon"]["name"];
-		nameCell.style.textTransform = "capitalize";
-		var str = pokemon__data[type][i]["pokemon"]["url"];
-		var res = str.substring(34, str.length - 1);
-		dataCell.innerHTML = `<a href="#" data-toggle="modal" data-target="#showDetails" onclick="showDetailsOnModal(event,${res})">${str}</a>`
-
-		//string.replace(url, "");
-		var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + res + ".png";
-
-		picData.className = "pokePic";
-
-		picData.style.backgroundImage = `url(${urlImage})`;
-		picCell.appendChild(picData);
-		typeCell.innerText = pokemonTypeText;
-		typeCell.style.textTransform = "capitalize";
-
-		tableRow.innerHTML = picCell.outerHTML + nameCell.outerHTML + typeCell.outerHTML + dataCell.outerHTML;
-		tableBody.appendChild(tableRow);
-
-	}
-}
-
-function showDetailsOnModal(e, idPokemon) {
-	console.log("Modal");
-	let modalObject = document.getElementsByClassName("modal-dialog")[0];
-	modalObject.style.display = "none";
-	let url = "https://pokeapi.co/api/v2/pokemon/" + idPokemon;
-	let singlePokemonData = [];
-	console.log("singlePokemonData: " + singlePokemonData);
-	let response;
-	httpGetAsync(url, function (response) {
-		singlePokemonData.push(JSON.parse(response));
-	})
-	var timeout = setInterval(function () {
-		if (singlePokemonData.length == 1) {
-			clearInterval(timeout);
-			fillModal(singlePokemonData); //, idPokemon);
-
-
-		}
-	}, 100);
-
-}
-
-function getTypeAndDamages(singlePokemonData, typePosition) {
-	let pokemonTypeText = "";
-
-	let typeModalSection = document.createElement("div");
-	typeModalSection.innerText = pokemon__type__damage["double_damage_from"][i]["name"];
-
-
-	if (typePosition == 0) { //if it is the first type, no comma, but add the rest with comma
-		pokemonTypeText = singlePokemonData[0]["types"][typePosition]["type"]["name"];
-		for (let i = 0; i < pokemon__type__damage["double_damage_from"].length i++) {
-
-			pokemonDamageText = pokemon__type__damage["double_damage_from"][i]["name"];
-
-			console.log("damage: " + pokemon__type__damage[0]["double_damage_from"][0]["name"]);
-
-		} else {
-			pokemonTypeText = ", " + singlePokemonData[0]["types"][typePosition]["type"]["name"]
-		}
-		bodyText.innerText += pokemonTypeText;
-
-		pokemonTypeText = getTypeAndDamages(singlePokemonData, i);
-	}
+function DOM_tableAllRows() {
+    // console.log("all rows")
+    let pokemonTable = document.getElementById("pokemonTable");
+    let tableBody = document.createElement("tbody"); //cambiar
+    for (let i = 0; i < filteredByTypePokemons.length; i++) {
+        singlePokemonData = filteredByTypePokemons[i];
+        DOM_tableSingleRow(pokemonTable, tableBody);
+    }
 }
 
 
-function fillModal(singlePokemonData) { //, idPokemon) {
-	console.log(singlePokemonData);
-	document.getElementById("pokemonModalTitle").innerText = singlePokemonData[0]["name"];
+function modalPokemon(e, pokemonId) {
 
-	//"modal-body"
-	console.log(singlePokemonData[0]);
-	console.log(singlePokemonData[0]["types"]);
-	let numTypes = singlePokemonData[0]["types"].length;
-	console.log("length" + numTypes);
-	let bodyText = document.getElementsByClassName("modal-body")[0];
-	bodyText.innerText = "";
-	let pokemonDamageText = "";
+    document.getElementById("modalPokemonTypeData").innerHTML = "";
+    let modalObject = document.getElementsByClassName("modal-dialog")[0];
+    let singlePokemonUrl = pokemonUrl + pokemonId;
+    modalObject.style.display = "none";
+    // console.log(singlePokemonUrl);
 
-	//Fill types
-	for (let i = 0; i < numTypes; i++) {
-		let pokemonTypeText = "";
-		console.log("types")
-		if (i == 0) { //if it is the first type, no comma, but add the rest with comma
-			pokemonTypeText = singlePokemonData[0]["types"][i]["type"]["name"];
-			pokemonDamageText = pokemon__type__damage[0]["double_damage_from"][0]["name"];
-			console.log("damage: " + pokemon__type__damage[0]["double_damage_from"][0]["name"]);
-		} else {
-			pokemonTypeText = ", " + singlePokemonData[0]["types"][i]["type"]["name"]
-		}
-		bodyText.innerText += pokemonTypeText;
+    singlePokemonData = [];
 
-		pokemonTypeText = getTypeAndDamages(singlePokemonData, i);
+    // console.log("singlePokemonData: " + singlePokemonData);
 
-	}
-	document.getElementById("damageRelations").innerText = pokemonDamageText;
-	bodyText = document.getElementsByClassName("modal-body")[1];
-	bodyText.innerText = "";
-
-	///////
-	// let url = "https://pokeapi.co/api/v2/pokemon-species/" + idPokemon;
-	let url = singlePokemonData[0]["species"]["url"];
-	let response;
-	let speciesInfo = 0;
-	httpGetAsync(url, function (response) {
-		speciesInfo = (JSON.parse(response));
-	})
-	let modalObject = document.getElementsByClassName("modal-dialog")[0];
-
-	var timeout = setInterval(function () {
-		if (speciesInfo != 0) {
-			clearInterval(timeout);
-			let generationName = speciesInfo["generation"]["name"];
-			bodyText.innerText += convertGeneration(generationName);
-			modalObject.style.display = "block";
-		}
-	}, 100);
-
-	//////////
-
-	let pokePic = document.getElementById("modalImage");
-	let urlImage = singlePokemonData[0]["sprites"]["front_default"];
-	console.log(urlImage);
-	pokePic.style.backgroundImage = `url(${urlImage})`;
+    let response;
+    httpGetAsync(singlePokemonUrl, function (response) {
+        singlePokemonData.push(JSON.parse(response));
+    })
+    var timeout = setInterval(function () {
+        if (singlePokemonData.length >= 1) {
+            clearInterval(timeout);
+            fillModal();
+        }
+    }, 100);
+}
 
 
+
+function fillModal() {
+
+    let pokePic = document.getElementById("modalImage");
+    let urlImage = singlePokemonData[0]["sprites"]["front_default"];
+    pokePic.style.backgroundImage = `url(${urlImage})`;
+
+    document.getElementById("pokemonModalTitle").innerText = singlePokemonData[0]["name"];
+
+    //"modal-body"
+    let modalTypeDataElement = document.getElementById("modalPokemonTypeData");
+    getPokemonGeneration(modalTypeDataElement)
+
+    let numTypes = singlePokemonData[0]["types"].length;
+    console.log("num types: " + numTypes)
+    // let pokemonDamageText = "";
+
+    //Fill types
+    // console.log(numTypes);
+    for (let i = 0; i < numTypes; i++) {
+
+        let modalTypeElement = document.createElement("div");
+        modalTypeElement.className = "modal-body"
+        let currentType = singlePokemonData[0]["types"][i]["type"]["name"]
+        modalTypeElement.innerHTML = currentType;
+        let damageRelationsHTML = document.createElement("div"); 
+        getTypeAndDamages(currentType,i);
+        setTimeout(() => {
+            
+            // console.log(listDamageRelationships);
+        // clearInterval(timeout);
+        // let singleTypeElementList = ;
+        // singleTypeElementList.innerHTML = damageRelationsHTML;
+        damageRelationsHTML.innerHTML = listDamageRelationships[i];
+        modalTypeElement.appendChild(damageRelationsHTML);
+        console.log(modalTypeElement);
+        modalTypeDataElement.appendChild(modalTypeElement);
+
+        }, 500);
+        
+        /* }
+        }, 100) */
+
+        // console.log(modalTypeElement);
+    }
+
+}
+
+
+function getTypeAndDamages(type, i) {
+    let typeDamageData = [];
+    let response;
+    // console.log("typeurl: " + typeUrl + type);
+    httpGetAsync(typeUrl + type, function (response) {
+        typeDamageData.push(JSON.parse(response));
+        // console.log(JSON.parse(response));
+    })
+
+    setTimeout(() => {
+
+        // console.log(typeDamageData)
+        //interval
+        // var timeout = setInterval(function () {
+        // console.log("inside interval. Length = " + typeDamageData.length)
+
+        // while ((typeof typeDamageData === 'undefined' || typeDamageData === null)) {
+        // console.log(" Still inside")
+        // }
+
+        // if (typeDamageData.length > 0) {
+        // clearInterval(timeout);
+        // console.log("inside timeout. Length = " + typeDamageData.length)
+
+        // console.log("DOM_MOodalDamage")
+        // console.log(typeDamageData[0]);
+        let damageRelations = typeDamageData[0]["damage_relations"];
+        let damageRelationsHTML = DOM_ModalDamage(damageRelations);
+// console.log(damageRelationsHTML);
+        listDamageRelationships[i] = damageRelationsHTML.outerHTML;
+    }, 300);
+
+    // }
+    // }, 100)
+    // console.log("finished getTypeanddamages")
+
+}
+
+
+function DOM_ModalDamage(damageRelations) {
+    // console.log("typeDamageData:")
+    // console.log(damageRelations)
+    let damageModalSection = document.createElement("div");
+    // damageModalSection.innerText = "Damage Relations";
+    let double_damage_to = document.createElement("div");
+    let double_damage_from = document.createElement("div");
+    let half_damage_to = document.createElement("div");
+    let half_damage_from = document.createElement("div");
+
+    //Damage to
+    double_damage_to.innerText = "Double Damage To:";
+    let damageList = document.createElement("ul");
+    for (let i = 0; i < damageRelations["double_damage_to"].length; i++) {
+        let damageRelationElement = document.createElement("li");
+        damageRelationElement.innerText = damageRelations["double_damage_to"][i]["name"]
+        // console.log(damageRelationElement);
+        damageList.innerHTML += damageRelationElement.outerHTML;
+    }
+    double_damage_to.innerHTML += damageList.outerHTML;
+    // console.log(damageList);
+    // console.log(double_damage_to);
+    damageModalSection.appendChild(double_damage_to);
+    // console.log(damageModalSection)
+    half_damage_to.innerText = "Half Damage To:";
+    damageList = document.createElement("ul");
+    for (let i = 0; i < damageRelations["half_damage_to"].length; i++) {
+        let damageRelationElement = document.createElement("li");
+        damageRelationElement.innerText = damageRelations["half_damage_to"][i]["name"]
+        damageList.innerHTML += damageRelationElement.outerHTML;
+    }
+    half_damage_to.innerHTML += damageList.outerHTML;
+    damageModalSection.appendChild(half_damage_to);
+    //Damage From
+    double_damage_from.innerText = "Double Damage From:";
+    damageList = document.createElement("ul");
+    for (let i = 0; i < damageRelations["double_damage_from"].length; i++) {
+        let damageRelationElement = document.createElement("li");
+        damageRelationElement.innerText = damageRelations["double_damage_from"][i]["name"]
+        damageList.innerHTML += damageRelationElement.outerHTML;
+    }
+    double_damage_from.innerHTML += damageList.outerHTML;
+    damageModalSection.appendChild(double_damage_from);
+
+    half_damage_from.innerText = "Half Damage From:";
+    damageList = document.createElement("ul");
+    for (let i = 0; i < damageRelations["half_damage_from"].length; i++) {
+        let damageRelationElement = document.createElement("li");
+        damageRelationElement.innerText = damageRelations["half_damage_from"][i]["name"]
+        damageList.innerHTML += damageRelationElement.outerHTML;
+    }
+    half_damage_from.innerHTML += damageList.outerHTML;
+    damageModalSection.appendChild(half_damage_from);
+
+
+    
+    console.log("finished modal DOM")
+    console.log(damageModalSection);
+    return damageModalSection;
+}
+
+
+
+
+function getPokemonGeneration(bodyText) {
+    //generation
+    let url = singlePokemonData[0]["species"]["url"];
+    let response;
+    let speciesInfo = 0;
+    httpGetAsync(url, function (response) {
+        speciesInfo = (JSON.parse(response));
+    })
+    let modalObject = document.getElementsByClassName("modal-dialog")[0];
+
+    var timeout = setInterval(function () {
+        if (speciesInfo != 0) {
+            clearInterval(timeout);
+            let generationName = speciesInfo["generation"]["name"];
+            bodyText.innerText += convertGeneration(generationName);
+            modalObject.style.display = "block";
+        }
+    }, 100);
 }
 
 function convertGeneration(generationString) {
-	let generationName = "";
-	switch (generationString) {
-		case "generation-i":
-			generationName = "1st Generation";
-			break;
-		case "generation-ii":
-			generationName = "2nd Generation";
-			break;
-		case "generation-iii":
-			generationName = "3rd Generation";
-			break;
-		case "generation-iv":
-			generationName = "4th Generation";
-			break;
-		case "generation-v":
-			generationName = "5th Generation";
-			break;
-		case "generation-vi":
-			generationName = "6th Generation";
-			break;
-		case "generation-vii":
-			generationName = "7th Generation";
-			break;
-		default:
-			generationName = generationString;
-			break;
+    let generationName = "";
+    switch (generationString) {
+        case "generation-i":
+            generationName = "1st Generation";
+            break;
+        case "generation-ii":
+            generationName = "2nd Generation";
+            break;
+        case "generation-iii":
+            generationName = "3rd Generation";
+            break;
+        case "generation-iv":
+            generationName = "4th Generation";
+            break;
+        case "generation-v":
+            generationName = "5th Generation";
+            break;
+        case "generation-vi":
+            generationName = "6th Generation";
+            break;
+        case "generation-vii":
+            generationName = "7th Generation";
+            break;
+        default:
+            generationName = generationString;
+            break;
 
-	}
-	return generationName;
+    }
+    return generationName;
 }
-
-function filterPokemon() {
-	//comprobar todos los checkBoxex del html y si están marcados o tienen texto los inputs, añadir String con el filtro a una array
-	let listaFiltros = whatIsChecked();
-	return listaFiltros;
-
-}
-
-function filterButtonDelay() {
-
-	let button = document.getElementById("filterButton");
-	button.setAttribute("disabled", "disabled");
-	setTimeout(() => {
-		button.removeAttribute("disabled");
-	}, 600);
-}
-
-/* function enableTypeFilters() {
-	if (document.getElementById("filterType")) {
-
-	} else {
-
-	}
-	let filters = document.getElementsByClassName("pokemon__Types");
-	for (let i = 0; i < filters.length; i++) {
-		filters[i].removeAttribute("disabled");
-	}
-
-} */
-
-
-/* function initTypes() {
-	let url = "https://pokeapi.co/api/v2/type/";
-	let response;
-	let name = "";
-	let currency = [];
-	httpGetAsync(url, function (response) {
-		document.getElementById(`countryCode${i+1}`).setAttribute("value", JSON.parse(response)["name"]);
-
-
-	})
-} */
-
-
 
 
 
 function httpGetAsync(theUrl, callback) {
-	var xmlHttp = new XMLHttpRequest();
-	xmlHttp.onreadystatechange = function () {
-		if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-			callback(xmlHttp.responseText);
-	}
-	xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-	xmlHttp.send(null);
-}
-
-
-function preventRefresh(event) {
-	event.preventDefault();
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
 }
 
 
 
 
 
-function prepareModalDamageInfo() {
-	let damageModalSection = document.createElement("div");
-	damageModalSection.classList = "modal-body";
-	damageModalSection.innerText = "Damage Relations";
-	let damageSubSection = document.createElement("div");
 
-	//Damage to
-	damageSubSection.innerText = "Double Damage To:";
-	let damageList = document.createElement("ul");
-	for (let i = 0; i < pokemon__type__damage["double_damage_to"].length; i++) {
-		let damageRelationElement = document.createElement("li");
-		damageRelationElement.innerText = pokemon__type__damage["double_damage_to"][i]["name"]
-		damageList.appendChild(damageRelationElement);
-	}
-	damageSubSection.appendChild(damageSubSection);
-	damageSubSection.innerText = "Half Damage To:";
-	let damageList = document.createElement("ul");
-	for (let i = 0; i < pokemon__type__damage["half_damage_to"].length; i++) {
-		let damageRelationElement = document.createElement("li");
-		damageRelationElement.innerText = pokemon__type__damage["half_damage_to"][i]["name"]
-		damageList.appendChild(damageRelationElement);
-	}
-	damageSubSection.appendChild(damageSubSection);
-	//Damage From
-	damageSubSection.innerText = "Double Damage From:";
-	let damageList = document.createElement("ul");
-	for (let i = 0; i < pokemon__type__damage["double_damage_from"].length; i++) {
-		let damageRelationElement = document.createElement("li");
-		damageRelationElement.innerText = pokemon__type__damage["double_damage_to"][i]["name"]
-		damageList.appendChild(damageRelationElement);
-	}
-	damageSubSection.appendChild(damageSubSection);
-	damageSubSection.innerText = "Half Damage From:";
-	let damageList = document.createElement("ul");
-	for (let i = 0; i < pokemon__type__damage["half_damage_from"].length; i++) {
-		let damageRelationElement = document.createElement("li");
-		damageRelationElement.innerText = pokemon__type__damage["half_damage_to"][i]["name"]
-		damageList.appendChild(damageRelationElement);
-	}
-	damageSubSection.appendChild(damageSubSection);
-	damageModalSection.appendChild(damageSubSection);
+function filterButtonDelay() {
+
+    let button = document.getElementById("filterButton");
+    button.setAttribute("disabled", "disabled");
+    setTimeout(() => {
+        button.removeAttribute("disabled");
+    }, 600);
 }

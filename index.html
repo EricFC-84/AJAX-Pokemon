@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="index.css">
 </head>
 
-<body onload="listPokemon()">
+<body onload="siteInit()">
 
     <div class="text-center">
         <h1>Pokémon Finder!</h1>
@@ -34,15 +34,17 @@
 
             <div class="row mx-0 justify-content-center">
                 <button type="button" class="btn btn-dark px-5 mt-4" id="filterButton"
-                    onclick="getPokemon(), filterButtonDelay()">Filter</button>
+                    onclick="filterPokemons(), filterButtonDelay()">Filter</button> 
+                    <!-- Favicon 18x18 px, png to favicon. favicon.ico. ponerlo al lado del index.html y ya lo carga -->
             </div>
-
+            <div><h3 style="display: none" id="pokeCount"> </h3></div>
         </div>
 
         <div class="container pt-5">
             <div class="row mx-0">
 
                 <table class="table table-dark table-bordered table-striped table-responsive" id="pokemonTable">
+                    <!-- TO DO: Paginar, Ordenar, Buscar (POB) -->
                     <thead>
                         <tr>
                             <th style="width: 15%">Image</th>
@@ -52,9 +54,6 @@
 
                         </tr>
                     </thead>
-                    <tbody>
-
-                    </tbody>
 
                 </table>
 
@@ -69,7 +68,7 @@
     <!-- Modal -->
     <div class="modal fade" id="showDetails" tabindex="-1" role="dialog" aria-labelledby="pokemonModalTitle"
         aria-hidden="true">
-        <div class="modal-dialog mx-auto" role="document" id="modalPokemonDialog">
+        <div class="modal-dialog" role="document" id="modalPokemonDialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="pokemonModalTitle"></h5>
@@ -78,14 +77,8 @@
                     </button>
                 </div>
                 <div class="row">
-                    <div class="col-6">
-                        <div class="modal-body">
-                        </div>
-                        <div class="modal-body damageType">
-                        </div>
-                        <div class="modal-body damageMultiplier" id="damageRelations">
-                                
-                        </div>
+                    <div class="col-6" id="modalPokemonTypeData">
+                        
                     </div>
                     <div class="col-6">
                         <div class="modal-body" id="modalImage"></div>
