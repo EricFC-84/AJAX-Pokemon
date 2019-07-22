@@ -50,7 +50,7 @@ function addElements() {
 function whatIsChecked() {
 	let boxes = document.querySelectorAll('input[type="checkbox"]');
 	let filtersChecked = [];
-	
+
 	for (var i = 0; i < boxes.length; i++) {
 		console.log(boxes[i]["checked"]);
 		if (boxes[i]["checked"] == true) {
@@ -104,42 +104,47 @@ function pokeDOM() {
 	console.log("1");
 	console.log(document.getElementsByClassName("pokeName"));
 	let tableBody = document.createElement("tbody");
-	for (let j = 0; j < pokemon__data.length; j++) {
-		let pokemonTypeText = filters[j];
+	for (let numTypes = 0; numTypes < pokemon__data.length; numTypes++) {
+		let pokemonTypeText = filters[numTypes];
 		console.log(pokemonTypeText);
+		pokeDOM_rows(pokemonTypeText, numTypes, tableBody);
 
-		for (let i = 0; i < pokemon__data[j].length; i++) {
-
-			let tableRow = document.createElement("tr");
-			let nameCell = document.createElement("td");
-			let picCell = document.createElement("td");
-			let picData = document.createElement("div");
-			let dataCell = document.createElement("td");
-			let typeCell = document.createElement("td");
-
-			nameCell.innerText = pokemon__data[j][i]["pokemon"]["name"];
-			nameCell.style.textTransform = "capitalize";
-			var str = pokemon__data[j][i]["pokemon"]["url"];
-			var res = str.substring(34, str.length - 1);
-			dataCell.innerHTML = `<a href="#" data-toggle="modal" data-target="#showDetails" onclick="showDetailsOnModal(event,${res})">${str}</a>`
-
-			//string.replace(url, "");
-			var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + res + ".png";
-
-			picData.className = "pokePic";
-
-			picData.style.backgroundImage = `url(${urlImage})`;
-			picCell.appendChild(picData);
-			typeCell.innerText = pokemonTypeText;
-			typeCell.style.textTransform = "capitalize";
-
-			tableRow.innerHTML = picCell.outerHTML + nameCell.outerHTML + typeCell.outerHTML + dataCell.outerHTML;
-			tableBody.appendChild(tableRow);
-
-		}
 		pokemonTable.appendChild(tableBody);
 	}
 
+}
+
+function pokeDOM_rows(pokemonTypeText, type, tableBody) {
+
+	for (let i = 0; i < pokemon__data[type].length; i++) {
+
+		let tableRow = document.createElement("tr");
+		let nameCell = document.createElement("td");
+		let picCell = document.createElement("td");
+		let picData = document.createElement("div");
+		let dataCell = document.createElement("td");
+		let typeCell = document.createElement("td");
+
+		nameCell.innerText = pokemon__data[type][i]["pokemon"]["name"];
+		nameCell.style.textTransform = "capitalize";
+		var str = pokemon__data[type][i]["pokemon"]["url"];
+		var res = str.substring(34, str.length - 1);
+		dataCell.innerHTML = `<a href="#" data-toggle="modal" data-target="#showDetails" onclick="showDetailsOnModal(event,${res})">${str}</a>`
+
+		//string.replace(url, "");
+		var urlImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + res + ".png";
+
+		picData.className = "pokePic";
+
+		picData.style.backgroundImage = `url(${urlImage})`;
+		picCell.appendChild(picData);
+		typeCell.innerText = pokemonTypeText;
+		typeCell.style.textTransform = "capitalize";
+
+		tableRow.innerHTML = picCell.outerHTML + nameCell.outerHTML + typeCell.outerHTML + dataCell.outerHTML;
+		tableBody.appendChild(tableRow);
+
+	}
 }
 
 function showDetailsOnModal(e, idPokemon) {
@@ -156,7 +161,7 @@ function showDetailsOnModal(e, idPokemon) {
 	var timeout = setInterval(function () {
 		if (singlePokemonData.length == 1) {
 			clearInterval(timeout);
-			fillModal(singlePokemonData, idPokemon);
+			fillModal(singlePokemonData); //, idPokemon);
 
 
 		}
@@ -164,7 +169,32 @@ function showDetailsOnModal(e, idPokemon) {
 
 }
 
-function fillModal(singlePokemonData, idPokemon) {
+function getTypeAndDamages(singlePokemonData, typePosition) {
+	let pokemonTypeText = "";
+
+	let typeModalSection = document.createElement("div");
+	typeModalSection.innerText = pokemon__type__damage["double_damage_from"][i]["name"];
+
+
+	if (typePosition == 0) { //if it is the first type, no comma, but add the rest with comma
+		pokemonTypeText = singlePokemonData[0]["types"][typePosition]["type"]["name"];
+		for (let i = 0; i < pokemon__type__damage["double_damage_from"].length i++) {
+
+			pokemonDamageText = pokemon__type__damage["double_damage_from"][i]["name"];
+
+			console.log("damage: " + pokemon__type__damage[0]["double_damage_from"][0]["name"]);
+
+		} else {
+			pokemonTypeText = ", " + singlePokemonData[0]["types"][typePosition]["type"]["name"]
+		}
+		bodyText.innerText += pokemonTypeText;
+
+		pokemonTypeText = getTypeAndDamages(singlePokemonData, i);
+	}
+}
+
+
+function fillModal(singlePokemonData) { //, idPokemon) {
 	console.log(singlePokemonData);
 	document.getElementById("pokemonModalTitle").innerText = singlePokemonData[0]["name"];
 
@@ -177,10 +207,11 @@ function fillModal(singlePokemonData, idPokemon) {
 	bodyText.innerText = "";
 	let pokemonDamageText = "";
 
+	//Fill types
 	for (let i = 0; i < numTypes; i++) {
 		let pokemonTypeText = "";
 		console.log("types")
-		if (i == 0) {
+		if (i == 0) { //if it is the first type, no comma, but add the rest with comma
 			pokemonTypeText = singlePokemonData[0]["types"][i]["type"]["name"];
 			pokemonDamageText = pokemon__type__damage[0]["double_damage_from"][0]["name"];
 			console.log("damage: " + pokemon__type__damage[0]["double_damage_from"][0]["name"]);
@@ -188,12 +219,13 @@ function fillModal(singlePokemonData, idPokemon) {
 			pokemonTypeText = ", " + singlePokemonData[0]["types"][i]["type"]["name"]
 		}
 		bodyText.innerText += pokemonTypeText;
-		
+
+		pokemonTypeText = getTypeAndDamages(singlePokemonData, i);
+
 	}
 	document.getElementById("damageRelations").innerText = pokemonDamageText;
 	bodyText = document.getElementsByClassName("modal-body")[1];
 	bodyText.innerText = "";
-
 
 	///////
 	// let url = "https://pokeapi.co/api/v2/pokemon-species/" + idPokemon;
@@ -315,4 +347,51 @@ function httpGetAsync(theUrl, callback) {
 
 function preventRefresh(event) {
 	event.preventDefault();
+}
+
+
+
+
+
+function prepareModalDamageInfo() {
+	let damageModalSection = document.createElement("div");
+	damageModalSection.classList = "modal-body";
+	damageModalSection.innerText = "Damage Relations";
+	let damageSubSection = document.createElement("div");
+
+	//Damage to
+	damageSubSection.innerText = "Double Damage To:";
+	let damageList = document.createElement("ul");
+	for (let i = 0; i < pokemon__type__damage["double_damage_to"].length; i++) {
+		let damageRelationElement = document.createElement("li");
+		damageRelationElement.innerText = pokemon__type__damage["double_damage_to"][i]["name"]
+		damageList.appendChild(damageRelationElement);
+	}
+	damageSubSection.appendChild(damageSubSection);
+	damageSubSection.innerText = "Half Damage To:";
+	let damageList = document.createElement("ul");
+	for (let i = 0; i < pokemon__type__damage["half_damage_to"].length; i++) {
+		let damageRelationElement = document.createElement("li");
+		damageRelationElement.innerText = pokemon__type__damage["half_damage_to"][i]["name"]
+		damageList.appendChild(damageRelationElement);
+	}
+	damageSubSection.appendChild(damageSubSection);
+	//Damage From
+	damageSubSection.innerText = "Double Damage From:";
+	let damageList = document.createElement("ul");
+	for (let i = 0; i < pokemon__type__damage["double_damage_from"].length; i++) {
+		let damageRelationElement = document.createElement("li");
+		damageRelationElement.innerText = pokemon__type__damage["double_damage_to"][i]["name"]
+		damageList.appendChild(damageRelationElement);
+	}
+	damageSubSection.appendChild(damageSubSection);
+	damageSubSection.innerText = "Half Damage From:";
+	let damageList = document.createElement("ul");
+	for (let i = 0; i < pokemon__type__damage["half_damage_from"].length; i++) {
+		let damageRelationElement = document.createElement("li");
+		damageRelationElement.innerText = pokemon__type__damage["half_damage_to"][i]["name"]
+		damageList.appendChild(damageRelationElement);
+	}
+	damageSubSection.appendChild(damageSubSection);
+	damageModalSection.appendChild(damageSubSection);
 }
